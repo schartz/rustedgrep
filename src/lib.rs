@@ -1,6 +1,4 @@
-
 use std::fs;
-
 use std::error::Error;
 
 
@@ -17,7 +15,6 @@ impl Config {
             return Err("Not enough arguments!");
         }
 
-
         let query = args[1].clone();
         let filename = args[2].clone();
         Ok(Config{query, filename})
@@ -26,12 +23,46 @@ impl Config {
 
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    println!("Search query is \"{}\"", config.query);
-    println!("File to search is \"{}\"", config.filename);
 
     let contents = fs::read_to_string(config.filename)?;
+    
+    let mut counter = 1;
 
-    println!("With text: \n{}", contents);
+
+    for line in search(&config.query, &contents) {
+        println!("{}: {:?}", counter, line);
+        counter = counter + 1;
+    }
 
     Ok(())
+}
+
+
+pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let mut results = vec![];
+    for line in contents.lines() {
+        if line.contains(query) {
+            results.push(line)
+        }
+    }
+    results
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn one_result() {
+        let query = "duct";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.";
+
+        assert_eq!(vec!["safe, fast, productive."], search(query, contents));
+        
+    }
 }
